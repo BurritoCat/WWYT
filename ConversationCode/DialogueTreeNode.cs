@@ -9,4 +9,12 @@ public class DialogueTreeNode : ScriptableObject
     public DialogueTreeNode[] nextConversations;
     public bool needsResponse;
     public bool isConversationEnd;
+
+    public bool affectsHealth;
+    public int healthAmount;
+
+    public bool affectsMoney;
+    public int moneyAmount;
+
+    public bool affectsTime;
 }
