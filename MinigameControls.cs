@@ -12,6 +12,7 @@ public class MinigameControls : MonoBehaviour
     private int currentIndex = 0;
     private bool started = false;
     [SerializeField] private float time = 10.0f;
+    private bool failed = false, won = false;
     [SerializeField] private GameObject minigameCanvas;
     
     public string[][] possibleText = new string [][]
@@ -22,17 +23,19 @@ public class MinigameControls : MonoBehaviour
     
     void Update()
     {
-        if(started && time > 0f)
+        if(started && time > 0f && !won)
         {
             time -= Time.deltaTime;
         }
 
-        if(time <= 0f)
+        if(time <= 0f && !failed && !won)
         {
+            failed = true;
             GameObject player = GameObject.FindWithTag("Player");
             gameObject.GetComponent<TimeChangeDialogue>().textToShow = possibleText[1];
-            player.GetComponent<Player>().minigameEnd();
+            gameObject.GetComponent<TimeChangeDialogue>().wasMinigameFailed = true;
             Destroy(this.gameObject.transform.GetChild(0).gameObject); 
+            player.GetComponent<Player>().minigameEnd();
         }
     }
     
@@ -48,6 +51,7 @@ public class MinigameControls : MonoBehaviour
         text = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).GetComponent<TMP_Text>();
         displayCurrentKey();
         started = true;
+        failed = false;
     }
 
     public void displayCurrentKey()
@@ -103,8 +107,12 @@ public class MinigameControls : MonoBehaviour
         {
             if(currentIndex == 5) 
             {
+                won = true;
                 gameObject.GetComponent<TimeChangeDialogue>().textToShow = possibleText[0];
+
                 Destroy(this.gameObject.transform.GetChild(0).gameObject);
+                Destroy(this);
+
                 return true;
             }
             else 
