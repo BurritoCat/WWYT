@@ -112,7 +112,7 @@ public class Dialogue : MonoBehaviour
                     text.text = "";
                     arrayIndex = 0;
                     sentenceIndex = 0;
-                    
+
                     //Otherwise, destroy dialogue box.
                     Destroy(this.gameObject.transform.GetChild(0).gameObject);
                     return 1;
