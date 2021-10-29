@@ -9,6 +9,8 @@ public class TimeChangeDialogue : MonoBehaviour
     private int wait, maxWait = 10;
     int arrayIndex, sentenceIndex;
     bool hasStarted = false;
+    public bool wasMinigameFailed = false;
+    public DialogueTreeNode[] afternoonDialogues;
 
     void Start()
     {
@@ -26,7 +28,6 @@ public class TimeChangeDialogue : MonoBehaviour
             text = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).GetComponent<TMP_Text>();
             text.text = "";
             hasStarted = true;
-            Debug.Log("Inspection Started");
         }
 
         else if (hasStarted)
@@ -74,7 +75,7 @@ public class TimeChangeDialogue : MonoBehaviour
             }
             else
             {
-                StartCoroutine(triggerFade());
+                StartCoroutine(timeChange());
 
                 Destroy(this.gameObject.transform.GetChild(0).gameObject);
                 return true;
@@ -82,16 +83,45 @@ public class TimeChangeDialogue : MonoBehaviour
         }
     }
 
-    private IEnumerator triggerFade()
+    private IEnumerator timeChange()
     {
         GameObject fadeCanvas = GameObject.FindWithTag("Fade");
         yield return StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(0, ""));
-        
+
         //Here, have to do the changing of in-scene objects.
         //Hardcode demo changes for now, later must relegate to another script.
-        //
+        ///////////////////////////////////////////////
+        this.gameObject.tag = "object";
+        this.gameObject.AddComponent<TextShow>();
+        this.gameObject.GetComponent<TextShow>().textToShow = new string[1] { "That's enough of that for now." };
+        GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
 
-        yield return new WaitForSeconds(0.2f);
+        Dialogue charD = GameObject.FindWithTag("character").GetComponent<Dialogue>();
+        SideCharacter otherChar = GameObject.FindWithTag("character").GetComponent<SideCharacter>();
+        if (wasMinigameFailed)
+        {
+            GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
+            GameObject.FindWithTag("Player").GetComponent<Player>().changeHealth(-5);
+        }
+        if (otherChar.characterFavor >= 100)
+        {
+            otherChar.setUpConversation(afternoonDialogues[0]);
+        }
+
+        else
+        {
+            otherChar.setUpConversation(afternoonDialogues[1]);
+        }
+        charD.textToShow = otherChar.Conversation;
+
+        //Here, must wait for previous changes to be done. Right now, simply a wait for seconds.
+        //Must change for a coroutine.
+        yield return new WaitForSeconds(0.5f);
         StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(0, ""));
+
+        ////////////////////////////////////////////
+        
+        GameObject.FindWithTag("Player").GetComponent<Player>().playerInput.SwitchCurrentActionMap("Player");
+        GameObject.FindWithTag("Player").GetComponent<Player>().changeMove();
     }
 }
