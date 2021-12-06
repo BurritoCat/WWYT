@@ -10,7 +10,7 @@ public class TimeChangeDialogue : MonoBehaviour
     int arrayIndex, sentenceIndex;
     bool hasStarted = false;
     public bool wasMinigameFailed = false;
-    public DialogueTreeNode[] afternoonDialogues;
+    public DialogueTreeNode[] newDialogues;
 
     void Start()
     {
@@ -21,7 +21,7 @@ public class TimeChangeDialogue : MonoBehaviour
         if (transform.childCount == 0 && hasStarted)
             hasStarted = false;
 
-        if (GameObject.FindGameObjectsWithTag("MGText").Length > 0 && !hasStarted)
+        if (GameObject.FindGameObjectsWithTag("MGText").Length > 0 && !hasStarted && this.gameObject.tag == "minigame")
         {
             arrayIndex = 0;
             sentenceIndex = 0;
@@ -87,41 +87,50 @@ public class TimeChangeDialogue : MonoBehaviour
     {
         GameObject fadeCanvas = GameObject.FindWithTag("Fade");
         yield return StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(0, ""));
+        Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
 
-        //Here, have to do the changing of in-scene objects.
-        //Hardcode demo changes for now, later must relegate to another script.
+        //Here, must do the changing of in-scene objects.
         ///////////////////////////////////////////////
-        this.gameObject.tag = "object";
-        this.gameObject.AddComponent<TextShow>();
-        this.gameObject.GetComponent<TextShow>().textToShow = new string[1] { "That's enough of that for now." };
-        GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
 
-        Dialogue charD = GameObject.FindWithTag("character").GetComponent<Dialogue>();
-        SideCharacter otherChar = GameObject.FindWithTag("character").GetComponent<SideCharacter>();
-        if (wasMinigameFailed)
+        if (this.gameObject.tag == "minigame") 
         {
+
+            this.gameObject.tag = "object";
+            this.gameObject.AddComponent<TextShow>();
+            this.gameObject.GetComponent<TextShow>().textToShow = new string[1] { "That's enough of that for now." };
             GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
-            GameObject.FindWithTag("Player").GetComponent<Player>().changeHealth(-5);
-        }
-        if (otherChar.characterFavor >= 100)
-        {
-            otherChar.setUpConversation(afternoonDialogues[0]);
-        }
 
-        else
-        {
-            otherChar.setUpConversation(afternoonDialogues[1]);
-        }
-        charD.textToShow = otherChar.Conversation;
+            Dialogue charD = GameObject.FindWithTag("character").GetComponent<Dialogue>();
+            SideCharacter otherChar = GameObject.FindWithTag("character").GetComponent<SideCharacter>();
+        
+            if (wasMinigameFailed)
+            {
+                GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
+                GameObject.FindWithTag("character").GetComponent<SideCharacter>().setFavor(-5);
+                DialogueTreeNode chosenConvo = otherChar.ConversationNode.nextConversations[1];
+                otherChar.setUpConversation(chosenConvo);
+            }
 
-        //Here, must wait for previous changes to be done. Right now, simply a wait for seconds.
-        //Must change for a coroutine.
+            else
+            {
+                GameObject.FindWithTag("character").GetComponent<SideCharacter>().setFavor(5);
+                DialogueTreeNode chosenConvo = otherChar.ConversationNode.nextConversations[0];
+                otherChar.setUpConversation(chosenConvo);
+            }
+
+            charD.textToShow = otherChar.Conversation;
+
+            GameObject.Find("HPhone").GetComponent<TextShow>().textToShow = new string[] { "A phone.", "My phone." };   
+            
+        }
+        //Display transitions
         yield return new WaitForSeconds(0.5f);
         StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(0, ""));
 
         ////////////////////////////////////////////
-        
-        GameObject.FindWithTag("Player").GetComponent<Player>().playerInput.SwitchCurrentActionMap("Player");
-        GameObject.FindWithTag("Player").GetComponent<Player>().changeMove();
+
+        player.playerInput.SwitchCurrentActionMap("Player");
+        player.changeMove();
+        player.currentMonologue = "Better go see the boss";
     }
 }

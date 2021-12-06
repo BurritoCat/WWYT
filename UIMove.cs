@@ -9,6 +9,11 @@ public class UIMove : MonoBehaviour
     [Tooltip("What canvas object has the buttons?")]public GameObject ButtonHolder;
     [SerializeField,Tooltip("What button does the UI currently have selected?")] private GameObject currentButtonSelected;
 
+    void Awake()
+    {
+        currentButtonSelected = null;
+    }
+
     public void MoveOption(InputAction.CallbackContext context)
     {
         if(context.performed)
@@ -21,20 +26,20 @@ public class UIMove : MonoBehaviour
 
                 if (currentButtonSelected != null)
                 {
-                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(255, 255, 255, 255);
+                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(217, 227, 228, 255);
                 }
 
                 if (x > 0)
                 {
                     //Select new option
                     currentButtonSelected = ButtonHolder.transform.GetChild(2).gameObject;
-                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(0, 222, 5, 150);
+                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(197, 207, 208, 255);
                 }
                 else
                 {
                     //Select new option
                     currentButtonSelected = ButtonHolder.transform.GetChild(1).gameObject;
-                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(0, 222, 5, 150);
+                    currentButtonSelected.transform.GetComponent<Image>().color = new Color32(197, 207, 208, 255);
                 }
             }
         }
@@ -42,9 +47,14 @@ public class UIMove : MonoBehaviour
 
     public void Select(InputAction.CallbackContext context)
     {
-        if (currentButtonSelected == null)
-            return;
+        if (context.performed)
+        {
+            if (currentButtonSelected == null)
+                return;
 
-        currentButtonSelected.transform.GetComponent<Buttons>().trigger();
+            GameObject temp = currentButtonSelected;
+            currentButtonSelected = null;
+            temp.transform.GetComponent<Buttons>().trigger();
+        }
     }
 }

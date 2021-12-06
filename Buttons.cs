@@ -14,7 +14,11 @@ public class Buttons : MonoBehaviour
     [Tooltip("Doors are within-level transitions.")]public bool isDoor = false;
     [Tooltip("If checked, door locks the camera.")] public bool cameraLocks = false;
     [Tooltip("If door, then where in scene does it take you.")] public Vector2 newPos;
-    
+    public bool changesMonologue;
+    public string newMonologue;
+
+    public bool timeSkip;
+
     void Awake()
     {
         fadeCanvas = GameObject.FindWithTag("Fade");
@@ -30,7 +34,7 @@ public class Buttons : MonoBehaviour
         if(fadeCanvas != null)
             yield return StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(whatScript, gameLevel));
 
-        if(isDoor)
+        if (isDoor)
         {
             //StopCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(whatScript, gameLevel));
             GameObject.FindWithTag("Player").transform.position = new Vector3(newPos.x, newPos.y, 0);
@@ -40,9 +44,22 @@ public class Buttons : MonoBehaviour
             if (cameraLocks)
                 GameObject.FindWithTag("MainCamera").transform.GetComponent<CameraFollow>().lockFollow();
             else
+            {
                 GameObject.FindWithTag("MainCamera").transform.GetComponent<CameraFollow>().unlockFollow();
-        }
+                GameObject.FindWithTag("MainCamera").transform.GetComponent<CameraFollow>().resetCamera();
+            }
 
+            if(changesMonologue)
+            {
+                Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
+                player.currentMonologue = newMonologue;
+            }
+
+            if(timeSkip)
+            {
+                GameObject.FindWithTag("GameController").GetComponent<TimeSkip>().triggerChange();
+            }
+        }
         yield return new WaitForSeconds(0.0f);
     }
 }

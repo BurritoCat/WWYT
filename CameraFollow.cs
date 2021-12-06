@@ -10,7 +10,7 @@ public class CameraFollow : MonoBehaviour
 
     void Update()
     {
-        if (canFollow && gameObject.tag == "MainCamera")
+        if (canFollow && gameObject.tag == "MainCamera" || gameObject.tag == "monologue")
         {
             transform.position = new Vector3(player.position.x + offset.x, player.position.y + offset.y, offset.z); // Camera follows the player with specified offset position
         }
@@ -18,4 +18,6 @@ public class CameraFollow : MonoBehaviour
 
     public void lockFollow() { canFollow = false; }
     public void unlockFollow() { canFollow = true; }
+
+    public void resetCamera() { transform.position = new Vector3(player.position.x + offset.x, player.position.y + offset.y, offset.z); }
 }
