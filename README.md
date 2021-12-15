@@ -10,6 +10,9 @@ generate the branching dialogues for the side character, and it may hold other v
 have, such as changing the current hint.
 
 The "GameTools" folder holds all the scripts that handle any logic or mechanics not directly related to player inptus
-or to the dialogue tree mechanics. There are scripts to handle the minigame display and controls, as well as scripts for on-screen buttons, and game- and scene-transitions.
+or to the dialogue tree mechanics. There are scripts to handle the minigame display and controls, as well as scripts for 
+on-screen buttons, and game- and scene-transitions.
 
-The "Player" folder holds all the scripts that handle the players input.
+The "PlayerCode" folder holds all the scripts that handle the players input, as well as scripts directly related to them, 
+namely the scripts for player dialogue choices. The "Player" script handles player inputs, and controls the logic for changing 
+the effects of player-inputs in game, while the "UIMove" script is for main-menu navigation.
