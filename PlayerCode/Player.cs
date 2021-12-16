@@ -20,12 +20,13 @@ public class Player : MonoBehaviour
     private bool canMove = true, minigameEnded = false;
     [HideInInspector] public PlayerInput playerInput;
     SpriteRenderer sprite;
+    [SerializeField] bool allowedThroughDoors = false;
 
     //Variables for dialogue options
     private int selection = 0;
     [HideInInspector] public int[] currentAnswer = new int[2] { 0, 0 };
     private int nextAnswer = 0;
-    public string currentMonologue;
+    private string currentMonologue = "Phone's ringing...";
     bool dialogueOptions = false;
     [SerializeField]int nameIndex = 0;
 
@@ -60,10 +61,10 @@ public class Player : MonoBehaviour
         if (isMoving && canMove)
         {
             if (movementInput.x > 0)
-                transform.localScale = new Vector3(-1,1,1);
+                transform.localScale = new Vector3(-1, 1, 1);
 
-            else
-                transform.localScale = new Vector3(1,1,1);
+            else if (movementInput.x < 0)
+                transform.localScale = new Vector3(1, 1, 1);
 
             transform.position = new Vector3(transform.position.x + movementInput.x, transform.position.y, transform.position.z);
         }
@@ -97,6 +98,7 @@ public class Player : MonoBehaviour
             if (canMove && !minigameEnded)
             {
                 movementInput = (context.ReadValue<Vector2>()) * speed;
+
                 isMoving = true;
             }
 
@@ -154,9 +156,7 @@ public class Player : MonoBehaviour
                     //Highlight selected answer.
                     option.GetComponent<AnswerType>().SetGlow(true);
 
-                    string temp = option.GetChild(0).GetComponent<TMP_Text>().text;
-                    string blame = "It was " + temp;
-                    Debug.Log(blame);
+                    string blame = "It was " + option.GetChild(0).GetComponent<TMP_Text>().text;
                     GameObject.FindWithTag("GameController").GetComponent<PlayerDatabase>().directText(blame);
                 }
             }
@@ -179,9 +179,14 @@ public class Player : MonoBehaviour
                 //Cannot move
                 canMove = !canMove;
                 isMoving = false;
-                if(target.gameObject.tag == "minigame")
+
+                if (GameObject.Find("DialogueBox(Clone)"))
+                    Destroy(GameObject.Find("DialogueBox(Clone)"));
+
+                if (target.gameObject.tag == "minigame")
                 {
-                    Debug.Log("Minigame Started");
+                    if (target.gameObject.GetComponent<MinigameControls>().enabled == false)
+                        target.gameObject.GetComponent<MinigameControls>().enabled = true;
                     playerInput.SwitchCurrentActionMap("UI");
                     currentMinigame = target.gameObject;
                     currentMinigame.GetComponent<MinigameControls>().startMinigame();
@@ -192,9 +197,14 @@ public class Player : MonoBehaviour
                 //If it's a door, trigger the jump.
                 if (target.gameObject.tag == "door")
                 {
+                    if (!allowedThroughDoors)
+                    {
+                        canMove = true;
+                        createMonologue();
+                        return;
+                    }
                     //target.gameObject.GetComponent<Buttons>().trigger();
                     StartCoroutine("doorTravel");
-                    canMove = !canMove;
                     return;
                 }
 
@@ -270,6 +280,15 @@ public class Player : MonoBehaviour
                             nextAnswer = 1;
                             selection = 3;
 
+                            Transform option = transform.GetChild(0).transform.GetChild(selection + 1).transform.GetChild(0);
+
+                            //Highlight selected answer.
+                            option.GetComponent<AnswerType>().SetGlow(true);
+
+                            int currentText = currentAnswer[0] * 3;
+                            currentText += selection - 3;
+                            GameObject.FindWithTag("GameController").GetComponent<PlayerDatabase>().displayText(currentText);
+                            
                             return;
                         }
 
@@ -287,14 +306,15 @@ public class Player : MonoBehaviour
                     //Only need the first index in currentAnswer;
                     else
                     {
-                        nameIndex++;
+                        if(selection == 0)
+                            nameIndex++;
+
                         currentAnswer[0] = selection;
                         response = true;
                         Destroy(this.gameObject.transform.GetChild(0).gameObject);
                     }
                     //Check if conversation ends,
                     //passing the player's answer.
-
                     int endConversation = target.gameObject.transform.parent.GetComponent<Dialogue>().ContinueConversation(response, currentAnswer);
                     currentAnswer = new int[] {0,0};
 
@@ -305,6 +325,7 @@ public class Player : MonoBehaviour
                         canMove = true;
                         if (transform.childCount >= 1)
                             Destroy(this.gameObject.transform.GetChild(0).gameObject);
+                        selection = 0;
                     }
 
                     //If dialogue passed a 2,
@@ -329,21 +350,13 @@ public class Player : MonoBehaviour
         //Code for displaying a hint.
         if(context.performed && transform.childCount == 0 && canMove)
         {
-            if (GameObject.Find("DialogueBox(Clone)"))
-                return;
-
-            var PopUp = Instantiate(dialogueBox, new Vector3(transform.position.x + (moveAmount * adjustX), transform.position.y + moveAmount, transform.position.z), Quaternion.identity);
-            PopUp.transform.SetParent(transform.parent.transform);
-            PopUp.transform.SetSiblingIndex(0);
-
-            PopUp.transform.gameObject.AddComponent<SelfDelete>();
-            Debug.Log(PopUp.transform.GetChild(0).transform.GetChild(0));
-            TMP_Text text = PopUp.transform.GetChild(0).transform.GetChild(0).transform.GetComponent<TMP_Text>();
-            text.text = currentMonologue;
+            createMonologue();
         }
 
-        else if(context.performed && (transform.gameObject.transform.GetChild(0).transform.childCount > 1) && !canMove)
+        else if(context.performed  && !canMove)
         {
+            if (!(transform.gameObject.transform.childCount > 0 && transform.gameObject.transform.GetChild(0).transform.childCount > 1))
+                return;
             if (nextAnswer > 0)
             {
                 Transform option = transform.GetChild(0).transform.GetChild(selection + 1).transform.GetChild(0);
@@ -359,9 +372,26 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void createMonologue()
+    {
+        if (GameObject.Find("DialogueBox(Clone)"))
+            return;
+
+        var PopUp = Instantiate(dialogueBox, new Vector3(transform.position.x + (moveAmount * adjustX), transform.position.y + moveAmount, transform.position.z), Quaternion.identity);
+        PopUp.transform.SetParent(transform.parent.transform);
+        PopUp.transform.SetSiblingIndex(0);
+
+        PopUp.transform.gameObject.AddComponent<SelfDelete>();
+        TMP_Text text = PopUp.transform.GetChild(0).transform.GetChild(0).transform.GetComponent<TMP_Text>();
+        text.text = currentMonologue;
+
+        return;
+    }
+
     private IEnumerator doorTravel()
     {
         yield return target.gameObject.GetComponent<Buttons>().change();
+        canMove = !canMove;
     }
 
     private void createResponseField()
@@ -387,6 +417,9 @@ public class Player : MonoBehaviour
             create.transform.SetParent(transform.GetChild(0));
             create.transform.SetSiblingIndex(boxNumber + 1);
             create.transform.GetChild(0).GetComponent<AnswerType>().SetText(boxNumber);
+
+            if (boxNumber == 0)
+                create.transform.GetChild(0).transform.GetComponent<AnswerType>().SetGlow(true);
         }
 
         return;
@@ -407,6 +440,10 @@ public class Player : MonoBehaviour
         create.transform.SetParent(transform.GetChild(0));
         create.transform.SetSiblingIndex(0);
         create.transform.GetChild(0).GetComponent<AnswerType>().SetNames(nameIndex);
+        create.transform.GetChild(0).GetComponent<AnswerType>().SetGlow(true);
+
+        string blame = "It was " + create.transform.GetChild(0).transform.GetChild(0).GetComponent<TMP_Text>().text;
+        GameObject.FindWithTag("GameController").GetComponent<PlayerDatabase>().directText(blame);
 
         create = Instantiate(optionBox, new Vector3(spot.x - 1.9f, spot.y + 1.0f, spot.z), Quaternion.identity);
         create.transform.SetParent(transform.GetChild(0));
@@ -466,6 +503,10 @@ public class Player : MonoBehaviour
         return;
     }
 
+    public void removeRange()
+    {
+        inRange = false;
+    }
     public void changeTime()
     {
         timeOfDay++;
@@ -493,5 +534,20 @@ public class Player : MonoBehaviour
     public int getIndex()
     {
         return nameIndex;
+    }
+
+    public void changeMonologue(string aString)
+    {
+        currentMonologue = aString;
+    }
+
+    public void allowDoors(bool aBool)
+    {
+        allowedThroughDoors = aBool;
+    }
+
+    public bool getDoors()
+    {
+        return allowedThroughDoors;
     }
 }
