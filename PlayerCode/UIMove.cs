@@ -53,8 +53,8 @@ public class UIMove : MonoBehaviour
                 return;
 
             GameObject temp = currentButtonSelected;
-            currentButtonSelected = null;
             temp.transform.GetComponent<Buttons>().trigger();
+            currentButtonSelected = null;
         }
     }
 }
