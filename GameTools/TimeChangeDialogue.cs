@@ -23,6 +23,9 @@ public class TimeChangeDialogue : MonoBehaviour
 
         if (GameObject.FindGameObjectsWithTag("MGText").Length > 0 && !hasStarted && this.gameObject.tag == "minigame")
         {
+            if (transform.childCount < 1)
+                return;
+            Debug.Log(GameObject.FindWithTag("MGText"));
             arrayIndex = 0;
             sentenceIndex = 0;
             text = transform.GetChild(0).transform.GetChild(0).transform.GetChild(0).GetComponent<TMP_Text>();
@@ -85,6 +88,10 @@ public class TimeChangeDialogue : MonoBehaviour
 
     private IEnumerator timeChange()
     {
+        GameObject MGObject = this.gameObject;
+        string formerTag = MGObject.tag;
+        MGObject.tag = "Untagged";
+
         GameObject fadeCanvas = GameObject.FindWithTag("Fade");
         yield return StartCoroutine(fadeCanvas.GetComponent<ScreenFade>().screenFade(0, ""));
         Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
@@ -92,12 +99,13 @@ public class TimeChangeDialogue : MonoBehaviour
         //Here, must do the changing of in-scene objects.
         ///////////////////////////////////////////////
 
-        if (this.gameObject.tag == "minigame") 
+        if (formerTag == "minigame") 
         {
-
-            this.gameObject.tag = "object";
-            this.gameObject.AddComponent<TextShow>();
-            this.gameObject.GetComponent<TextShow>().textToShow = new string[1] { "That's enough of that for now." };
+            while (MGObject.transform.childCount > 0)
+                Destroy(MGObject.transform.GetChild(0));
+            
+            MGObject.AddComponent<TextShow>();
+            MGObject.GetComponent<TextShow>().textToShow = new string[1] { "That's enough of that for now." };
             GameObject.FindWithTag("Player").GetComponent<Player>().changeTime();
 
             Dialogue charD = GameObject.FindWithTag("character").GetComponent<Dialogue>();
@@ -109,6 +117,7 @@ public class TimeChangeDialogue : MonoBehaviour
                 GameObject.FindWithTag("character").GetComponent<SideCharacter>().setFavor(-5);
                 DialogueTreeNode chosenConvo = otherChar.ConversationNode.nextConversations[1];
                 otherChar.setUpConversation(chosenConvo);
+                wasMinigameFailed = false;
             }
 
             else
@@ -120,7 +129,9 @@ public class TimeChangeDialogue : MonoBehaviour
 
             charD.textToShow = otherChar.Conversation;
 
-            GameObject.Find("HPhone").GetComponent<TextShow>().textToShow = new string[] { "A phone.", "My phone." };   
+            TextShow phone = GameObject.Find("HPhone").GetComponent<TextShow>();
+            phone.textToShow = new string[] { "A phone.", "My phone." };
+            phone.changesMonologue = false;
             
         }
         //Display transitions
@@ -131,6 +142,9 @@ public class TimeChangeDialogue : MonoBehaviour
 
         player.playerInput.SwitchCurrentActionMap("Player");
         player.changeMove();
-        player.currentMonologue = "Better go see the boss";
+        player.changeMonologue("Better go see the boss");
+        GameObject.Find("InSceneDoorO").GetComponent<Buttons>().changeAllowDoors = true;
+        if (formerTag == "minigame")
+            MGObject.tag = "object";
     }
 }
