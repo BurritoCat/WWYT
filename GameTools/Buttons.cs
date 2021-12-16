@@ -16,6 +16,8 @@ public class Buttons : MonoBehaviour
     [Tooltip("If door, then where in scene does it take you.")] public Vector2 newPos;
     public bool changesMonologue;
     public string newMonologue;
+    
+    public bool changeAllowDoors;
 
     public bool timeSkip;
 
@@ -52,14 +54,28 @@ public class Buttons : MonoBehaviour
             if(changesMonologue)
             {
                 Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
-                player.currentMonologue = newMonologue;
+                player.changeMonologue(newMonologue);
+                changesMonologue = !changesMonologue;
             }
 
+            if(changeAllowDoors)
+            {
+                Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
+                player.allowDoors(!player.getDoors());
+                changeAllowDoors = !changeAllowDoors;
+            }
             if(timeSkip)
             {
                 GameObject.FindWithTag("GameController").GetComponent<TimeSkip>().triggerChange();
+                timeSkip = false;
             }
         }
         yield return new WaitForSeconds(0.0f);
+    }
+
+    public void changeMonologue(string aString)
+    {
+        changesMonologue = true;
+        newMonologue = aString;
     }
 }
