@@ -22,4 +22,6 @@ public class DialogueTreeNode : ScriptableObject
     public bool changesDoor;
     public string whichDoor, whatMonologue;
     public float newX, newY;
+
+    public bool allowsDoor;
 }
