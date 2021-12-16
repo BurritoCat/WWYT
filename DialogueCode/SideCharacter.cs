@@ -21,8 +21,7 @@ public class SideCharacter : MonoBehaviour
             someDoor.newPos = new Vector2(ConversationNode.newX, ConversationNode.newY);
             if (ConversationNode.whatMonologue != "")
             {
-                someDoor.changesMonologue = true;
-                someDoor.newMonologue = ConversationNode.whatMonologue;
+                someDoor.changeMonologue(ConversationNode.whatMonologue);
                 someDoor.timeSkip = true;
             }
         }
@@ -43,12 +42,15 @@ public class SideCharacter : MonoBehaviour
                 this.gameObject.GetComponent<Dialogue>().changeResponse(ConversationNode.needsResponse);
                 this.gameObject.GetComponent<Dialogue>().changeCharacter(ConversationNode.pickSomeone);
                 if (ConversationNode.changesMonologue)
-                    player.currentMonologue = ConversationNode.newMonologue;
+                    player.changeMonologue(ConversationNode.newMonologue);
                 if (ConversationNode.changesDoor)
                 {
                     Debug.Log("Must change door " + GameObject.Find(ConversationNode.whichDoor));
                     GameObject.Find(ConversationNode.whichDoor).GetComponent<Buttons>().newPos = new Vector2(ConversationNode.newX, ConversationNode.newY);
                 }
+                if (ConversationNode.allowsDoor)
+                    player.allowDoors(true);
+
             }
 
             else
@@ -64,7 +66,7 @@ public class SideCharacter : MonoBehaviour
                 this.gameObject.GetComponent<Dialogue>().changeResponse(ConversationNode.needsResponse);
                 this.gameObject.GetComponent<Dialogue>().changeCharacter(ConversationNode.pickSomeone);
                 if (ConversationNode.changesMonologue)
-                    player.currentMonologue = ConversationNode.newMonologue;
+                    player.changeMonologue(ConversationNode.newMonologue);
             }
 
         }
@@ -81,11 +83,13 @@ public class SideCharacter : MonoBehaviour
 
         else
         {
-            GameObject player = GameObject.FindWithTag("Player");
+            Player player = GameObject.FindWithTag("Player").GetComponent<Player>();
             if (ConversationNode.affectsMoney)
-                player.GetComponent<Player>().changeMoney(ConversationNode.moneyAmount);
+                player.changeMoney(ConversationNode.moneyAmount);
             if (ConversationNode.affectsTime)
-                player.GetComponent<Player>().changeTime();
+                player.changeTime();
+            if (ConversationNode.allowsDoor)
+                player.allowDoors(true); 
 
             if (ConversationNode.nextConversations.Length == 1)
             {
@@ -101,7 +105,6 @@ public class SideCharacter : MonoBehaviour
                 this.gameObject.GetComponent<Dialogue>().changeResponse(ConversationNode.needsResponse);
                 this.gameObject.GetComponent<Dialogue>().changeCharacter(ConversationNode.pickSomeone);
             }
-
         }
 
         return Conversation;
