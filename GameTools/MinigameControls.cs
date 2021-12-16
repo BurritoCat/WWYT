@@ -18,13 +18,17 @@ public class MinigameControls : MonoBehaviour
     [SerializeField] private GameObject minigameCanvas, progressBar;
     public GameObject countdownBar;
 
-
+    public void Reset()
+    {
+        failed = false;
+        won = false;
+    }
     public string[][] possibleText = new string [][]
     {
         new string[2] {"Alright, nothing too serious.", "Should be done real quick." },
         new string[2] {"Crap. I can't make any sense of this.", "This isn't good." }
     };
-    
+
     void Update()
     {
         if(started && time > 0f && !won)
@@ -37,6 +41,7 @@ public class MinigameControls : MonoBehaviour
             else if (fullPercent < 0)
                 fullPercent = 0;
 
+            if(countdownBar != null)
             countdownBar.GetComponent<ProgressBar>().SetFill(fullPercent);
         }
 
@@ -44,19 +49,27 @@ public class MinigameControls : MonoBehaviour
         {
             failed = true;
             GameObject player = GameObject.FindWithTag("Player");
+            Destroy(GameObject.FindWithTag("ProgressBar"));
             gameObject.GetComponent<TimeChangeDialogue>().textToShow = possibleText[1];
             gameObject.GetComponent<TimeChangeDialogue>().wasMinigameFailed = true;
-            Destroy(this.gameObject.transform.GetChild(0).gameObject); 
+            if(this.gameObject.transform.childCount > 0)
+                Destroy(this.gameObject.transform.GetChild(0).gameObject);
+ 
             player.GetComponent<Player>().minigameEnd();
+            this.enabled = false;
         }
     }
     
     public void startMinigame()
     {
+        if (won || failed)
+            return;
+
         //Reset time, and create the object to display keys
         time = maxTime;
         failed = false;
         won = false;
+        currentIt = 0;
         var PopUp = Instantiate(minigameCanvas, new Vector3(transform.position.x, transform.position.y + 1.5f, transform.position.z), Quaternion.identity);
         PopUp.transform.SetParent(transform);
         PopUp.transform.SetSiblingIndex(0);
@@ -81,7 +94,6 @@ public class MinigameControls : MonoBehaviour
         populateArray();
 
         started = true;
-        failed = false;
     }
 
     public void displayCurrentKey()
@@ -158,10 +170,10 @@ public class MinigameControls : MonoBehaviour
 
                 won = true;
                 gameObject.GetComponent<TimeChangeDialogue>().textToShow = possibleText[0];
-                currentIt = 0;
+                currentIt = 1;
                 Destroy(this.gameObject.transform.GetChild(0).gameObject);
-                this.enabled = false;
                 Destroy(GameObject.FindWithTag("ProgressBar"));
+                this.enabled = false;
 
                 return true;
             }
@@ -183,5 +195,7 @@ public class MinigameControls : MonoBehaviour
         numberOfKeys += 2;
         repeats += 2;
         maxTime += 1;
+        if(this.gameObject.transform.childCount > 0)
+            Destroy(this.gameObject.transform.GetChild(0).gameObject);
     }
 }
