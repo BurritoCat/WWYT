@@ -14,7 +14,7 @@ public class TextShow : MonoBehaviour
     public bool hasStarted = false;
     public bool changesMonologue;
     public string newMonologue;
-
+    public bool allowsDoors, doorBool;
     public bool endGame = false;
 
     void Start()
@@ -86,7 +86,9 @@ public class TextShow : MonoBehaviour
                 {
                     Destroy(this.gameObject.transform.GetChild(0).gameObject);
                     if(changesMonologue)
-                        GameObject.FindWithTag("Player").GetComponent<Player>().currentMonologue = newMonologue;
+                        GameObject.FindWithTag("Player").GetComponent<Player>().changeMonologue(newMonologue);
+                    if(allowsDoors)
+                        GameObject.FindWithTag("Player").GetComponent<Player>().allowDoors(doorBool);
                 }
                 else if (this.gameObject.tag == "monologue")
                     Destroy(this.gameObject);
